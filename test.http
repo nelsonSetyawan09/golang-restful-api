@@ -1,0 +1,31 @@
+
+### findall Category
+GET http://localhost:8080/api/categories
+X-API-KEY: RAHASIA
+
+### findbyid Category
+GET http://localhost:8080/api/categories/100
+X-API-KEY: RAHASIA
+
+### Create Category
+POST http://localhost:8080/api/categories
+X-API-KEY: RAHASIA
+Content-Type: application/json
+
+{
+    "name": "category 3"
+}
+
+#### Update Category
+PUT http://localhost:8080/api/categories/4
+Content-Type: application/json
+
+{
+    
+    "name": "Category 4 Updated"
+}
+
+### Delete Category
+DELETE http://localhost:8080/api/categories/1
+X-API-KEY: RAHASIA
+

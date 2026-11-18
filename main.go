@@ -2,32 +2,70 @@ package main
 
 import (
 	"belajar-golang-restful-api/app"
+	"belajar-golang-restful-api/config"
 	"belajar-golang-restful-api/controller"
 	"belajar-golang-restful-api/helper"
 	"belajar-golang-restful-api/middleware"
 	"belajar-golang-restful-api/repository"
 	"belajar-golang-restful-api/service"
+	"log"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/joho/godotenv"
 )
 
 func main() {
 
-	validate := validator.New()
-	DB := app.NewDB()
-	categoryRepository := repository.NewCategoryRepository()
-	categoryService := service.NewCategoryService(categoryRepository, DB, validate)
-	categoryController := controller.NewCategoryController(categoryService)
-
-	router := app.NewRouter(categoryController)
-
-	server := http.Server{
-		Addr:    "localhost:8080",
-		Handler: middleware.NewAuthMiddleware(router),
+	// Load environment
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
 	}
 
-	err := server.ListenAndServe()
-	helper.PanicIfError(err)
+	// Load configuration
+	cfg := config.LoadConfig()
+
+	// Initialize validator
+	validate := validator.New()
+
+	// Initialize database
+	db := app.NewDB(cfg)
+	defer db.Close()
+
+	// Initialize repository
+	categoryRepository := repository.NewCategoryRepository()
+
+	// Initialize service
+	categoryService := service.NewCategoryService(
+		categoryRepository,
+		db,
+		validate,
+	)
+
+	// Initialize controller
+	categoryController := controller.NewCategoryController(categoryService)
+
+	// Initialize router
+	router := app.NewRouter(categoryController)
+
+	// Initialize middleware
+	handler := middleware.CorsMiddleware(
+		middleware.NewAuthMiddleware(router, cfg),
+		cfg,
+	)
+
+	// Initialize server
+	server := http.Server{
+		Addr:    cfg.AppHost + ":" + cfg.AppPort,
+		Handler: handler,
+	}
+
+	log.Println("Server running on", server.Addr)
+
+	err = server.ListenAndServe()
+	if err != nil && err != http.ErrServerClosed {
+		helper.PanicIfError(err)
+	}
 }

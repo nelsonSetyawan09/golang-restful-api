@@ -12,6 +12,9 @@
 *.out
 *.test
 
+# HTTP Test
+test.http
+
 # IDE
 .vscode/
 .idea/

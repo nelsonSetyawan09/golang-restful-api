@@ -1,22 +1,38 @@
 package app
 
 import (
+	"belajar-golang-restful-api/config"
 	"belajar-golang-restful-api/helper"
 	"database/sql"
 	"fmt"
+	"log"
+	"time"
 )
 
-func NewDB() *sql.DB {
-	db, err := sql.Open("mysql", "golang_user:golang_qwer@tcp(127.0.0.1:3306)/belajar_golang_rest_api")
+func NewDB(cfg *config.Config) *sql.DB {
+
+	dsn := fmt.Sprintf(
+		"%s:%s@tcp(%s:%s)/%s",
+		cfg.DBUser,
+		cfg.DBPassword,
+		cfg.DBHost,
+		cfg.DBPort,
+		cfg.DBName,
+	)
+
+	db, err := sql.Open("mysql", dsn)
 	helper.PanicIfError(err)
+
 	err = db.Ping()
 	helper.PanicIfError(err)
-	fmt.Println("Database connected successfully!")
+
+	log.Println("Database connected successfully!")
 
 	db.SetMaxIdleConns(5)
 	db.SetMaxOpenConns(20)
 
-	db.SetConnMaxLifetime(60 * 60)
-	db.SetConnMaxIdleTime(10 * 60)
+	db.SetConnMaxLifetime(60 * time.Minute)
+	db.SetConnMaxIdleTime(10 * time.Minute)
+
 	return db
 }
